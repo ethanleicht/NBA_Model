@@ -55,7 +55,8 @@ def get_avg_win_pct_last_n_games(team, game_date, df, n):
         prev_game_df = df[df['Date'] < game_date][(df['Home'] == team) | (df['Away'] == team)].sort_values(by = 'Date').tail(n)
         
         wins = 0 
-        # Filter columns to include only 'Home' team and result, then divide into home and away games        result_df = prev_game_df.iloc[:, range(0,32,31)]
+        # Filter columns to include only 'Home' team and result, then divide into home and away games        
+        result_df = prev_game_df.iloc[:, range(0,32,31)]
         h_df = result_df.loc[result_df['Home'] == team] 
         
         h_wins = h_df.loc[h_df['Result'] == 1]
@@ -209,7 +210,6 @@ def add_novel_features(df):
 
 
 
-# drop categorical variables and divide data into training and test sets
 def prepare_data(df):
     df = df.drop(['H_Team_Elo_After', 'A_Team_Elo_After'], axis=1)
     df["H_Team_Elo_Before"] = df.H_Team_Elo_Before.astype(float)
@@ -227,7 +227,6 @@ def prepare_data(df):
 
 
 
-# explore correlation between features
 def eda(df):
     plt.figure(figsize=(25, 25))
     correlation = df[['H_W_PCT', 'H_REB', 'H_AST',
@@ -337,8 +336,6 @@ def generate_plots(results_long_nofit, results_long_fit):
 
 
 
-# tune hyperparameters of Gaussian Naive Bayes model
-# return optimal model and confusion matrix
 def tune_GNB(X_train, X_test, y_train, y_test):
     nb_classifier = GaussianNB()
     target_names = ['Win', 'Loss']
@@ -374,21 +371,14 @@ def save_model(model, filename):
 
 
 def main():
-    # data extraction, augmentation, exploration
     df = get_raw_data()
     df = add_novel_features(df)
     eda(df)
-
-    # machine learning
     X_train, X_test, y_train, y_test = prepare_data(df)
     final = run_exps(X_train, X_test, y_train, y_test)
-
-    # analysis of results
     bootstrap_df = boostrap(final)
     results_long_nofit, results_long_fit = evaluate_models(bootstrap_df)
     generate_plots(results_long_nofit, results_long_fit)
-
-    # tuning, saving Gaussian Naive Bayes
     model, confusion_matrix = tune_GNB(X_train, X_test, y_train, y_test)
     save_model(model, 'model')
     
