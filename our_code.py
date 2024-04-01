@@ -17,29 +17,31 @@ import pickle
 
 
 
-# put raw data into dataframes
 def get_raw_data():
+    # Load the 2018 NBA season data, convert dates, and add season identifier
     df_2018 = pd.read_csv('nba_data/nba_df_2018.csv')
     df_2018['Date'] = pd.to_datetime(df_2018['Date'])
     df_2018['Season'] = '2018-19'
-
+    
+    # Load the 2019 NBA season data from two parts, convert dates, and unify under a single season identifier
     df_2019 = pd.read_csv('nba_data/nba_df_2019.csv')
     df_2019['Date'] = pd.to_datetime(df_2019['Date'])
     df_2019['Season'] = '2019-20'
-
+    
+    # Combine the two parts of the 2019 season data into one
     df_2019_2 = pd.read_csv('nba_data/nba_df_2019_2.csv')
     df_2019_2['Date'] = pd.to_datetime(df_2019_2['Date'])
     df_2019_2['Season'] = '2019-20'
-
     frames = [df_2019, df_2019_2]
     df_2019_final = pd.concat(frames)
     len(df_2019_final)
 
+    # Load the 2020 NBA season data, convert dates, and add season identifier
     df_2020 = pd.read_csv('nba_data/nba_df_2020.csv')
     df_2020['Date'] = pd.to_datetime(df_2020['Date'])
     df_2020['Season'] = '2020-21'
     len(df_2020)
-
+    # Combine all seasons into a single DataFrame and reset the index
     frames = [df_2018, df_2019_final, df_2020]
     df = pd.concat(frames)
     df = df.reset_index(drop=True)
@@ -49,11 +51,11 @@ def get_raw_data():
 
 
 def get_avg_win_pct_last_n_games(team, game_date, df, n):
+        # Extract the last 10 games 
         prev_game_df = df[df['Date'] < game_date][(df['Home'] == team) | (df['Away'] == team)].sort_values(by = 'Date').tail(n)
         
         wins = 0 
-        
-        result_df = prev_game_df.iloc[:, range(0,32,31)]
+        # Filter columns to include only 'Home' team and result, then divide into home and away games        result_df = prev_game_df.iloc[:, range(0,32,31)]
         h_df = result_df.loc[result_df['Home'] == team] 
         
         h_wins = h_df.loc[h_df['Result'] == 1]
@@ -71,6 +73,8 @@ def get_avg_win_pct_last_n_games(team, game_date, df, n):
 
 # Home and road team win probabilities implied by Elo ratings and home court adjustment 
 import math
+
+# Calculate win probabilities using Elo ratings and home court advantage
 def win_probs(home_elo, away_elo, home_court_advantage) :
     h = math.pow(10, home_elo/400)
     r = math.pow(10, away_elo/400)
@@ -82,14 +86,14 @@ def win_probs(home_elo, away_elo, home_court_advantage) :
   
     return home_prob, away_prob
 
-#odds the home team will win based on elo ratings and home court advantage
+# Calculate odds of the home team winning based on Elo ratings and home court advantage
 def home_odds_on(home_elo, away_elo, home_court_advantage) :
     h = math.pow(10, home_elo/400)
     r = math.pow(10, away_elo/400)
     a = math.pow(10, home_court_advantage/400)
     return a*h/r
 
-#this function determines the constant used in the elo rating, based on margin of victory and difference in elo ratings
+# Determines the K factor in Elo rating updates, considering the margin of victory and Elo rating difference
 def elo_k(MOV, elo_diff):
     k = 20
     if MOV>0:
@@ -98,7 +102,7 @@ def elo_k(MOV, elo_diff):
         multiplier=(-MOV+3)**(0.8)/(7.5+0.006*(-elo_diff))
     return k*multiplier
 
-#updates the home and away teams elo ratings after a game 
+# Update Elo ratings for both teams following a game, considering the outcome and game specifics
 def update_elo(home_score, away_score, home_elo, away_elo, home_court_advantage) :
     home_prob, away_prob = win_probs(home_elo, away_elo, home_court_advantage) 
 
@@ -116,7 +120,7 @@ def update_elo(home_score, away_score, home_elo, away_elo, home_court_advantage)
     
     return updated_home_elo, updated_away_elo
 
-#takes into account prev season elo
+# Define a function to retrieve a team's Elo rating before a given game, adjusting for season transitions
 def get_prev_elo(team, date, season, team_stats, elo_df) :
     prev_game = team_stats[team_stats['Date'] < date][(team_stats['Home'] == team) | (team_stats['Away'] == team)].sort_values(by = 'Date').tail(1).iloc[0] 
 
@@ -129,7 +133,6 @@ def get_prev_elo(team, date, season, team_stats, elo_df) :
         return (0.75 * elo_rating) + (0.25 * 1505)
     else :
         return elo_rating
-
 
 
 
@@ -154,13 +157,14 @@ def add_novel_features(df):
     elo_df = pd.DataFrame(columns=['Game_ID', 'H_Team', 'A_Team', 'H_Team_Elo_Before', 'A_Team_Elo_Before', 'H_Team_Elo_After', 'A_Team_Elo_After'])
     teams_elo_df = pd.DataFrame(columns=['Game_ID','Team', 'Elo', 'Date', 'Where_Played', 'Season']) 
 
+    # Loop through each game to update ELO ratings
     for index, row in df.iterrows(): 
         game_id = row['Game_ID']
         game_date = row['Date']
         season = row['Season']
         h_team, a_team = row['Home'], row['Away']
         h_score, a_score = row['H_Score'], row['A_Score'] 
-
+        # Set or get previous Elo ratings
         if (h_team not in elo_df['H_Team'].values and h_team not in elo_df['A_Team'].values) :
             h_team_elo_before = 1500
         else :
@@ -177,7 +181,8 @@ def add_novel_features(df):
                                                                             'H_Team_Elo_After' : h_team_elo_after, 'A_Team_Elo_After': a_team_elo_after}
         teams_row_one = {'Game_ID': game_id,'Team': h_team, 'Elo': h_team_elo_before, 'Date': game_date, 'Where_Played': 'Home', 'Season': season}
         teams_row_two = {'Game_ID': game_id,'Team': a_team, 'Elo': a_team_elo_before, 'Date': game_date, 'Where_Played': 'Away', 'Season': season}
-    
+        
+        # Record Elo ratings in elo_df and teams_elo_df
         elo_df.loc[len(elo_df)] = new_row
         teams_elo_df.loc[len(teams_elo_df)] = teams_row_one
         teams_elo_df.loc[len(teams_elo_df)] = teams_row_two
@@ -190,12 +195,14 @@ def add_novel_features(df):
     dataset = dataset.set_index("Team")
 
     for index, row in teams_elo_df.iterrows():
+        # Create a dataset for tracking Elo ratings over time
         date = row["Date"].strftime("%m-%d-%Y")
         team = row["Team"]
         elo = row["Elo"]
         dataset[date][team] = elo
 
     teams_elo_df['Elo'] = teams_elo_df['Elo'].astype(float)
+    # Merge updated Elo ratings back into the main DataFrame
     df = df.merge(elo_df.drop(columns=['H_Team', 'A_Team']), on ='Game_ID')
     
     return df
