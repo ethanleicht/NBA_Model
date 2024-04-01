@@ -17,6 +17,7 @@ import pickle
 
 
 
+# put raw data into dataframes
 def get_raw_data():
     df_2018 = pd.read_csv('nba_data/nba_df_2018.csv')
     df_2018['Date'] = pd.to_datetime(df_2018['Date'])
@@ -131,6 +132,7 @@ def get_prev_elo(team, date, season, team_stats, elo_df) :
 
 
 
+
 def add_novel_features(df):
     import warnings
     warnings.filterwarnings("ignore")
@@ -200,6 +202,7 @@ def add_novel_features(df):
 
 
 
+# drop categorical variables and divide data into training and test sets
 def prepare_data(df):
     df = df.drop(['H_Team_Elo_After', 'A_Team_Elo_After'], axis=1)
     df["H_Team_Elo_Before"] = df.H_Team_Elo_Before.astype(float)
@@ -217,6 +220,7 @@ def prepare_data(df):
 
 
 
+# explore correlation between features
 def eda(df):
     plt.figure(figsize=(25, 25))
     correlation = df[['H_W_PCT', 'H_REB', 'H_AST',
@@ -326,6 +330,8 @@ def generate_plots(results_long_nofit, results_long_fit):
 
 
 
+# tune hyperparameters of Gaussian Naive Bayes model
+# return optimal model and confusion matrix
 def tune_GNB(X_train, X_test, y_train, y_test):
     nb_classifier = GaussianNB()
     target_names = ['Win', 'Loss']
@@ -361,14 +367,21 @@ def save_model(model, filename):
 
 
 def main():
+    # data extraction, augmentation, exploration
     df = get_raw_data()
     df = add_novel_features(df)
     eda(df)
+
+    # machine learning
     X_train, X_test, y_train, y_test = prepare_data(df)
     final = run_exps(X_train, X_test, y_train, y_test)
+
+    # analysis of results
     bootstrap_df = boostrap(final)
     results_long_nofit, results_long_fit = evaluate_models(bootstrap_df)
     generate_plots(results_long_nofit, results_long_fit)
+
+    # tuning, saving Gaussian Naive Bayes
     model, confusion_matrix = tune_GNB(X_train, X_test, y_train, y_test)
     save_model(model, 'model')
     
