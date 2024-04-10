@@ -7,5 +7,6 @@ All files/folders in this repository are from the parent paper's code except the
 - `nba_data/our_df_final2.csv`
 - `our_code.py`
 - `our_code2.ipynb`
+
 `our_code.py` is our remodulation of the parent paper's original code in `full_code.ipynb`.
 `our_code2.ipynb` includes all of our novelization work. This file pulls data from `nba_data/stats_archive` and `nba_data/games_archive`.
