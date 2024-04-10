@@ -1,5 +1,5 @@
 # NBA_Model
-Machine learning model to predict NBA games.
+Machine learning model to predict NBA game outcomes.
 All files/folders in this repository are from the parent paper's code except the following:
 - `nba_data/stats_archive`
 - `nba_data/games_archive`
