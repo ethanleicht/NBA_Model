@@ -1,16 +1,16 @@
-# NBA_Model
-Machine learning model to predict NBA game outcomes.
+# Predicting NBA Outcomes with Machine Learning
+Rashed Almogezwi, Ethan Leicht
 
-All files/folders in this repository are from the parent paper's code except the following:
-- `nba_data/stats_archive`
-- `nba_data/games_archive`
-- `nba_data/our_df_final.csv`
-- `nba_data/our_df_final2.csv`
-- `our_code.py`
-- `our_code2.ipynb`
+All files and folders in `parent_paper` are from the parent paper's Git repository, which can be accessed [here](https://github.com/mhoude1/NBA_Model).
 
-`our_code.py` is our remodulation of the parent paper's original code in `full_code.ipynb`.
+`nba_data/stats_archive` and `nba_data/games_archive` are downloaded from Kaggle, which can be accessed [here](https://www.kaggle.com/datasets/sumitrodatta/nba-aba-baa-stats?select=Advanced.csv).
 
-`our_code2.ipynb` includes all of our novelization work. This file pulls data from `nba_data/stats_archive` and `nba_data/games_archive`.
+ The remainder of the files and folders are our work.
 
-`nba_data/our_df_final.csv` and `nba_data/our_df_final2.csv` are the datasets created in `our_code2.ipynb`, containing our novel feature. These are the datasets upon which we conduct feature reduction and machine learning in `our_code2.ipynb`.
+`parent_paper_remodulation.py` is our remodulation of the parent paper's original code in `parent_paper/full_code.ipynb`.
+
+`make_df.ipynb` pulls data from `nba_data/stats_archive` and `nba_data/games_archive` to create `nba_data/nba_df_final.csv`.
+
+`nba_data/nba_df_final.csv` is the dataset used for feature/dimensionality reduction and machine learning in `reduce_train_analyze.ipynb`.
+
+`reduce_train_analyze.ipynb` generates visualizations of our results and saves the images in `plots`.
